@@ -45,8 +45,9 @@ namespace coursework.Core
             _del = new UniformDelayGenerator(cfg.DeliveryUniform.Min, cfg.DeliveryUniform.Max, _rng);
         }
 
-        private void Schedule(EventType type, double time)
-            => _fel.Enqueue(new SimEvent(time, type), time);
+        private void Schedule(EventType type, double time, ServiceNode? node = null) => _fel.Enqueue(new SimEvent(time, type, node), time);
+
+        private void ScheduleServiceCompletion(ServiceNode node, double delay) => Schedule(EventType.ServiceCompletion, Now + delay, node);
 
         private double NextExp() => _exp.GetDelay();
         private double NextAdmin() => _admin.GetDelay();
@@ -81,18 +82,8 @@ namespace coursework.Core
                         Schedule(EventType.DemandArrival, Now + NextExp());
                         break;
 
-                    case EventType.OrderAdminDone: 
-                        if (_debugTrace) Console.WriteLine($"t={Now:F2}: admin done, start kitting");
-                        Schedule(EventType.KittingDone, Now + NextKit()); 
-                        break;
-
-                    case EventType.KittingDone: 
-                        if (_debugTrace) Console.WriteLine($"t={Now:F2}: kitting done, start delivery");
-                        Schedule(EventType.DeliveryArrived, Now + NextDel()); 
-                        break;
-
-                    case EventType.DeliveryArrived:
-                        HandleDelivery();
+                    case EventType.ServiceCompletion:
+                        HandleServiceCompletion(ev.Node!.Value);
                         break;
                 }
             }
@@ -131,7 +122,7 @@ namespace coursework.Core
 
                 if (_debugTrace) Console.WriteLine($"t={Now:F2}: TRIGGER reorder, Q={Qcurrent}, I={I}");
 
-                Schedule(EventType.OrderAdminDone, Now + NextAdmin());
+                ScheduleServiceCompletion(ServiceNode.Admin, NextAdmin());
             }
         }
 
@@ -165,5 +156,27 @@ namespace coursework.Core
             }
             _lastTime = Now; 
         }
+
+        private void HandleServiceCompletion(ServiceNode node)
+        {
+            switch (node)
+            {
+                case ServiceNode.Admin:
+                    if (_debugTrace) Console.WriteLine($"t={Now:F2}: admin done → start kitting");
+                    ScheduleServiceCompletion(ServiceNode.Kitting, NextKit());
+                    break;
+
+                case ServiceNode.Kitting:
+                    if (_debugTrace) Console.WriteLine($"t={Now:F2}: kitting done → start delivery");
+                    ScheduleServiceCompletion(ServiceNode.Delivery, NextDel());
+                    break;
+
+                case ServiceNode.Delivery:
+                    if (_debugTrace) Console.WriteLine($"t={Now:F2}: delivery arrived");
+                    HandleDelivery();
+                    break;
+            }
+        }
     }
+
 }

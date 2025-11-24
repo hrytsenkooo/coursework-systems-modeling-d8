@@ -2,9 +2,7 @@
 {
     public enum EventType
     {
-        DemandArrival,
-        OrderAdminDone,
-        KittingDone,
-        DeliveryArrived
+        DemandArrival,     
+        ServiceCompletion   
     }
 }

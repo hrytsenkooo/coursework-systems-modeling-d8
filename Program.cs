@@ -6,6 +6,7 @@ namespace coursework
     {
         static void Main()
         {
+            WarmupExperiment.Run();
             Verification.RunAll();
             SensitivityAnalysis.RunAll();
 
