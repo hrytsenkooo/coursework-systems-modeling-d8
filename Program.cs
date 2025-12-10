@@ -6,29 +6,29 @@ namespace coursework
     {
         static void Main()
         {
+            Console.WriteLine("=== Starting Coursework Experiments ===\n");
             WarmupExperiment.Run();
+
             Verification.RunAll();
+
             SensitivityAnalysis.RunAll();
 
-            var baseCfg = new SimulationConfig(
-                MeanInterarrival: 60,  
+            Console.WriteLine("\n--- FINAL BEST CONFIGURATION DEMO ---");
+            var bestCfg = new SimulationConfig(
                 S: 20,
-                s: 3,
+                s: 9, 
                 Policy: ReplenishmentPolicyType.sS,
                 Qfixed: 3,
+                StockMeanTime: 1200,
                 AdminDelay: 60,
                 KittingUniform: (40, 80),
                 DeliveryUniform: (55, 65),
                 WarmupTime: 2000,
-                RunTime: 20000,
-                Replications: 30,         
-                Seed: 12345
+                RunTime: 100000, 
+                Replications: 30,
+                Seed: 999
             );
-
-            Console.WriteLine("\n--- MAIN EXPERIMENTS ---");
-
-            ExperimentRunner.RunSeries("(s,S) = (3,20)", baseCfg with { Policy = ReplenishmentPolicyType.sS });
-            ExperimentRunner.RunSeries("(s,Q) = (3,3)", baseCfg with { Policy = ReplenishmentPolicyType.sQ });
+            ExperimentRunner.RunSeries("Best Found: (s,S) = (9,20)", bestCfg);
 
             Console.WriteLine("\n--- All experiments finished. Press any key to exit. ---");
             Console.ReadKey();

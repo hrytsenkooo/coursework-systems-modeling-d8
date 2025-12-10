@@ -1,4 +1,5 @@
-﻿using coursework.Core;
+﻿using coursework.Elements;
+using coursework.Scenarios;
 using coursework.Statistics;
 
 namespace coursework.Experiments
@@ -15,12 +16,16 @@ namespace coursework.Experiments
 
             for (int r = 0; r < cfg.Replications; r++)
             {
-                var model = new Model(cfg, replicationIndex: r);
-                var result = model.Run();
+                var model = InventoryModelBuilder.Build(cfg, replicationIndex: r);
 
-                results_AvgInv.Add(result.AvgInventory);
-                results_Downtime.Add(result.DowntimeShare);
-                results_Stockout.Add(result.StockoutShare);
+                model.Run(cfg.WarmupTime + cfg.RunTime, cfg.WarmupTime);
+
+                var warehouse = (Process)model.GetElementByName("Warehouse");
+                var stats = warehouse.GetStats(cfg.RunTime);
+
+                results_AvgInv.Add(stats.AvgLoad);
+                results_Downtime.Add(stats.DowntimeShare);
+                results_Stockout.Add(stats.StockoutShare);
             }
 
             var (mInv, ciInv) = StatsHelper.MeanAndCI95(results_AvgInv);
@@ -28,9 +33,9 @@ namespace coursework.Experiments
             var (mSo, ciSo) = StatsHelper.MeanAndCI95(results_Stockout);
 
             Console.WriteLine("--- Results (95% C.I.) ---");
-            Console.WriteLine($"Avg inventory (avg load): {mInv:F3} ± {ciInv:F3} units");
-            Console.WriteLine($"Downtime share (P(I=0)): {mDt:P2} ± {ciDt:P2}");
-            Console.WriteLine($"Stockout share (P(demand|I=0)): {mSo:P2} ± {ciSo:P2}");
+            Console.WriteLine($"Avg inventory: {mInv:F3} ± {ciInv:F3} units");
+            Console.WriteLine($"Downtime share: {mDt:P2} ± {ciDt:P2}");
+            Console.WriteLine($"Stockout share: {mSo:P2} ± {ciSo:P2}");
         }
     }
 }
