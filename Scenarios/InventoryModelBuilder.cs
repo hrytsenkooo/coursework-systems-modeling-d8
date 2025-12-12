@@ -40,22 +40,15 @@ namespace coursework.Scenarios
 
             BlockPredicate triggerCondition = (m) =>
             {
-                var wh = (Process)m.GetElementByName("Warehouse");
-                var adm = (Process)m.GetElementByName("Admin");
-                var kit = (Process)m.GetElementByName("Kitting");
-                var del = (Process)m.GetElementByName("Delivery");
+                bool isPending = (admin.State > 0 || admin.Queue > 0 || kitting.State > 0 || kitting.Queue > 0 || delivery.State > 0 || delivery.Queue > 0);
 
-                bool isPending = (adm.State > 0 || adm.Queue > 0 ||
-                                  kit.State > 0 || kit.Queue > 0 ||
-                                  del.State > 0 || del.Queue > 0);
-
-                if (wh.State <= cfg.s && !isPending)
+                if (warehouse.State <= cfg.s && !isPending)
                 {
                     if (cfg.Policy == ReplenishmentPolicyType.sS)
-                        m.LastOrderedQuantity = cfg.S - wh.State; 
+                        m.LastOrderedQuantity = cfg.S - warehouse.State;
                     else
                         m.LastOrderedQuantity = cfg.Qfixed;
-                    return false; 
+                    return false;
                 }
                 return true;
             };
@@ -75,7 +68,7 @@ namespace coursework.Scenarios
 
             BatchSizeCalculator batchCalc = (m) =>
             {
-                return m.LastOrderedQuantity; 
+                return m.LastOrderedQuantity;
             };
 
             deliveryRouter.AddRoute(new Route(warehouse, batchCalc: batchCalc));
