@@ -2,17 +2,17 @@
 
 namespace coursework.Elements
 {
-    public class Dispose : Element
+    public class Consumer : Element
     {
-        public int Accepted { get; private set; }
+        public int ItemsConsumed { get; private set; }
 
-        public Dispose(string name) : base(name, null)
+        public Consumer(string name) : base(name, null)
         {
         }
 
         public override void InAct(Item item)
         {
-            Accepted++;
+            ItemsConsumed++;
             base.InAct(item);
         }
     }

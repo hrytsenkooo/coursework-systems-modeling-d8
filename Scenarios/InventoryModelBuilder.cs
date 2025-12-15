@@ -15,28 +15,21 @@ namespace coursework.Scenarios
 
             var warehouse = new Process("Warehouse", cfg.S, 0, new ExponentialDelayGenerator(cfg.StockMeanTime, rng));
 
-            var orderGen = new Create("OrderGen", 0.1);
-
             var admin = new Process("Admin", 1, -1, new ConstantDelayGenerator(cfg.AdminDelay));
             var kitting = new Process("Kitting", 1, -1, new UniformDelayGenerator(cfg.KittingUniform.Min, cfg.KittingUniform.Max, rng));
             var delivery = new Process("Delivery", 1, -1, new UniformDelayGenerator(cfg.DeliveryUniform.Min, cfg.DeliveryUniform.Max, rng));
 
-            var consumedSink = new Dispose("Consumed");
+            var workshop = new Consumer("Consumed");
 
             model.AddElement(warehouse);
-            model.AddElement(orderGen);
             model.AddElement(admin);
             model.AddElement(kitting);
             model.AddElement(delivery);
-            model.AddElement(consumedSink);
+            model.AddElement(workshop);
 
             for (int i = 0; i < cfg.S; i++) warehouse.InAct(new Item(0.0));
 
             var warehouseRouter = new PriorityRouter();
-            warehouseRouter.AddRoute(new Route(consumedSink));
-            warehouse.Router = warehouseRouter;
-
-            var genRouter = new PriorityRouter();
 
             BlockPredicate triggerCondition = (m) =>
             {
@@ -53,8 +46,10 @@ namespace coursework.Scenarios
                 return true;
             };
 
-            genRouter.AddRoute(new Route(admin, block: triggerCondition));
-            orderGen.Router = genRouter;
+            warehouseRouter.AddRoute(new Route(admin, block: triggerCondition));
+            warehouseRouter.AddRoute(new Route(workshop));
+
+            warehouse.Router = warehouseRouter;
 
             var adminRouter = new PriorityRouter();
             adminRouter.AddRoute(new Route(kitting));
